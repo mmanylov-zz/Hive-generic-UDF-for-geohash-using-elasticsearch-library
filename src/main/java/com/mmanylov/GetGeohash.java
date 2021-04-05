@@ -20,8 +20,9 @@ import org.elasticsearch.common.geo.GeoPoint;
 
 // hadoop fs -put target/HiveGeohashUDF-1.0-SNAPSHOT.jar /scripts
 // CREATE FUNCTION geohash AS 'com.mmanylov.GetGeohash' using JAR 'hdfs:///scripts/HiveGeohashUDF-1.0-SNAPSHOT.jar';
+// select lat, lng, geohash(lat, lng) as GetGeohash from weather_parquet limit 10;
 /**
- * GetGeohash(string latitude, string longitude) is a function to get 4-symbol geohash.
+ * GetGeohash(double latitude, double longitude) is a function to get 4-symbol geohash.
  * See explain extended annotation below to read more about how this UDF works
  *
  */
@@ -39,8 +40,6 @@ public class GetGeohash extends GenericUDF {
      */
     private ObjectInspectorConverters.Converter[] converters;
 
-    private  static final String[] BAD_VALUES = {"", "NA"};
-
     @Override
     public ObjectInspector initialize(ObjectInspector[] arguments) throws UDFArgumentException {
         if (arguments.length != 2) {
@@ -51,7 +50,7 @@ public class GetGeohash extends GenericUDF {
         for (int i = 0; i < arguments.length; i++) {
             if (arguments[i].getCategory() != Category.PRIMITIVE) {
                 throw new UDFArgumentTypeException(i,
-                        "A string argument was expected but an argument of type " + arguments[i].getTypeName()
+                        "A double argument was expected but an argument of type " + arguments[i].getTypeName()
                                 + " was given.");
 
             }
@@ -61,10 +60,10 @@ public class GetGeohash extends GenericUDF {
             PrimitiveCategory primitiveCategory = ((PrimitiveObjectInspector) arguments[i])
                     .getPrimitiveCategory();
 
-            if (primitiveCategory != PrimitiveCategory.STRING
+            if (primitiveCategory != PrimitiveCategory.DOUBLE
                     && primitiveCategory != PrimitiveCategory.VOID) {
                 throw new UDFArgumentTypeException(i,
-                        "A string argument was expected but an argument of type " + arguments[i].getTypeName()
+                        "A double argument was expected but an argument of type " + arguments[i].getTypeName()
                                 + " was given.");
 
             }
@@ -73,11 +72,11 @@ public class GetGeohash extends GenericUDF {
         converters = new ObjectInspectorConverters.Converter[arguments.length];
         for (int i = 0; i < arguments.length; i++) {
             converters[i] = ObjectInspectorConverters.getConverter(arguments[i],
-                    PrimitiveObjectInspectorFactory.writableStringObjectInspector);
+                    PrimitiveObjectInspectorFactory.javaDoubleObjectInspector);
         }
 
         // We will be returning a Text object
-        return PrimitiveObjectInspectorFactory.writableStringObjectInspector;
+        return PrimitiveObjectInspectorFactory.javaStringObjectInspector;
     }
 
     @Override
@@ -94,11 +93,12 @@ public class GetGeohash extends GenericUDF {
         GeoPoint point = new GeoPoint(latitude, longitude);
         String geohash = point.geohash();
         return geohash.substring(0, 4);
+	//return "geohash here";
     }
 
     @Override
     public String getDisplayString(String[] arguments) {
         assert (arguments.length == 2);
-        return "geohash(" + arguments[0] + ", " + arguments[1] + ")";
+        return "GetGeohash(" + arguments[0] + ", " + arguments[1] + ")";
     }
 }
