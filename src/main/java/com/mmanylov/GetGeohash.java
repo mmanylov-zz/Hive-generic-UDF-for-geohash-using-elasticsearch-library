@@ -18,7 +18,8 @@ import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectIn
 import org.elasticsearch.common.geo.GeoPoint;
 
 
-// create function geohash as 'com.mmanylov.udf.GetGeohash' USING JAR 'hdfs:///script/java/udf/GetGeohash.jar'
+// hadoop fs -put target/HiveGeohashUDF-1.0-SNAPSHOT.jar /scripts
+// CREATE FUNCTION geohash AS 'com.mmanylov.GetGeohash' using JAR 'hdfs:///scripts/HiveGeohashUDF-1.0-SNAPSHOT.jar';
 /**
  * GetGeohash(string latitude, string longitude) is a function to get 4-symbol geohash.
  * See explain extended annotation below to read more about how this UDF works
